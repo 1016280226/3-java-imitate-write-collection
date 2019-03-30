@@ -16,6 +16,8 @@ import java.util.Arrays;
  *     假设: 添加元素超过了数组的长度,就会抛出数组越界。所以导致了程序崩溃，需要进行扩容。
  *   c.重点如果实现扩容？
  *     方法一: 简单扩容: 添加元素size * 2
+ *     方法二: 在方法一的基础上优化 ，使用Arrays.copyOf方法进行扩容。
+ *     方法三：原生 ArrayList 底层每次扩容以1.5 倍。
  *
  * 3.根据下标，获取指定的元素。
  * 4.根据下标，删除指定的元素。
@@ -23,6 +25,18 @@ import java.util.Arrays;
  *   分析:
  *    a.元素往前移动多少个: 数组长度 - 1 - index
  *    b.删除后，数组长度-1,并且最后一个元素设置为空。
+ * 5.根据下标，添加指定的元素。
+ * 例如: A: {1,2,3,4,5} -> 添加元素6，到4的下标中去 -> B: {1,2,3,6,4,5}
+ * 观察分析:
+ *   1.数组长度＋1
+ *   2.根据下标，插入元素后，后面元素和下标往后移。
+ * 实现思路:
+ * 第一步: 判断当前下标不能为0，并且不能大于数组的长度。由于，数组扩容的原因为1.5倍，所以添加一个元素时会进行扩容1个位置。
+ *  if(index > size || index < 0) -> 抛出异常。
+ * 第二步: 进行扩容 1 个位置。
+ * 第三步: 进行向后移位+1。
+ * 第四步: 根据对应下标赋值。
+ * 第五步: 数组长度+1。
  *
  */
 public class CustomerArrayList<E> implements CustomerList<E>{
@@ -34,7 +48,7 @@ public class CustomerArrayList<E> implements CustomerList<E>{
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
     // CustomerArrayList 底层采用数组存放
-    private E[] elementData;
+    private Object[] elementData;
 
     // 记录数组长度
     private int size;
@@ -57,14 +71,14 @@ public class CustomerArrayList<E> implements CustomerList<E>{
         if(initalCapacity < 0 ){
              throw new IllegalArgumentException("Illegal Capacity: " + initalCapacity);
         }
-        this.elementData = (E[]) new Object[initalCapacity];
+        this.elementData =  new Object[initalCapacity];
     }
 
     /***************************************** 第二步: 实现add 和 get 方法 ********************************************/
 
     public E get(int index) {
         rangeCheck(index);
-        E e = elementData[index];
+        E e = (E) elementData[index];
         return e;
     }
 
@@ -75,21 +89,20 @@ public class CustomerArrayList<E> implements CustomerList<E>{
     }
 
     /**
-     * 方法一: 添加元素放入存放到数组中，当数据容量大的时候，对io操作影响大，不推荐使用
+     * 方法一: 实现2倍扩容（当数据容量大的时候，对io操作影响大，不推荐使用）
      *
      * @param e 元素
      */
     public void add1(E e){
-         /********************* 方法一: 使用简单的扩容。*****************************/
          if(size == elementData.length){
             int newCapacity = size * 2;
-             Object[] newArrarys = new Object[newCapacity];
+             Object[] newArrays = new Object[newCapacity];
             // 将原来数组的值赋值到新数组里面去
              for(int i=0; i< elementData.length; i++){
-                 newArrarys[i] = elementData[i];
+                 newArrays[i] = elementData[i];
              }
              // 在将新素组赋值给源数组，使源数组时原来容量的2倍
-             elementData = (E[]) newArrarys;
+             elementData = newArrays;
          }
          // 从第0个开始
         elementData[size++] = e;
@@ -124,18 +137,6 @@ public class CustomerArrayList<E> implements CustomerList<E>{
 
     /**
      * 方法四: 根据下标，添加元素
-     * A: {1,2,3,4,5}
-     * B: {1,2,3,6,4,5}
-     *
-     * 分析: 1.数组长度＋1 2.根据下标，插入元素后，后面元素和下标往后移。
-     * 第一步: 判断当前下标不能为0，并且不能大于数组的长度。由于，数组扩容的原因为1.5倍，所以添加一个元素时会进行扩容1个位置。
-     *  if(index > size || index < 0) -> 抛出异常。
-     * 第二步: 进行扩容 1 个位置。
-     * 第三步: 进行向后移位+1。
-     * 第四步: 根据对应下标赋值。
-     * 第五步: 数组长度+1。
-     *
-     *
      * @param e 元素
      */
     public void add4(int index, E e){
@@ -178,7 +179,7 @@ public class CustomerArrayList<E> implements CustomerList<E>{
     public E remove(int index){
        // 使用下标该值是否存在
         E e = this.get(index);
-        // 相当于把删除后的后面的元素往前移动
+        // 相当于把删除后的后面的元素往前移动了几次
         int numMoved = size - index - 1;
         if(numMoved > 0){
             //  删除原理

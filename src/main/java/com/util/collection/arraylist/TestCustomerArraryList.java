@@ -35,12 +35,12 @@ public class TestCustomerArraryList{
 
     @Test
     public void testAdd4(){
-        CustomerArrayList arrayList = new CustomerArrayList(1);
-        arrayList.add3("1");
-        arrayList.add3("2");
-        arrayList.add3("3");
-        arrayList.add4(4,"4");
-        System.out.println(arrayList.getSize());
+        ArrayList arrayList = new ArrayList(1);
+        arrayList.add("1");
+        arrayList.add("2");
+//        arrayList.add3("3");
+        arrayList.add(2,"4");
+        System.out.println(arrayList.size());
     }
 
     @Test
