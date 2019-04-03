@@ -112,23 +112,25 @@ public class CustomerHashMap<K, V> implements CustomerMap<K, V> {
         } else {
 
             // 表示该Node
-            Node<K, V> newNode = node;
-            while (newNode != null) {
+            Node<K, V> originNode = node;
+            while (originNode != null) {
                 // hashCode是相同的 || 对象是相同的, 覆盖key 中的value 值。
-                if (newNode.getKey().equals(k) || newNode.getKey() == k) {
-                    newNode.value = v;
+                if (originNode.getKey().equals(k) || originNode.getKey() == k) {
                     // 返回老的值
-                    return newNode.setValue(v);
+                    return originNode.setValue(v);
                 } else {
                     // Node 元素没有节点，说明遍历的时最后一个
-                    if (newNode.next == null){
+                    if (originNode.next == null){
                         /** 发生hash地址冲突(hash地址相同，但是对象不同) **/
                         // 后进先出
-                        newNode = new Node<K, V>(k, v, newNode);
+                        // 将新的节点放入到链表中，然后在放入数组中去。
+                        Node<K,V> conflictNode = new Node(k, v, originNode);
+                        node = conflictNode;
+                        conflictNode = null;
                         size++;
                     }
                 }
-                newNode = node .next;
+                originNode = originNode .next;
             }
         }
         table[index] = node;
